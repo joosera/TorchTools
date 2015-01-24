@@ -30,23 +30,19 @@
 
 package net.doubledoordev.torchtools;
 
-import cpw.mods.fml.client.config.IConfigElement;
-import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import net.doubledoordev.d3core.D3Core;
-import net.doubledoordev.d3core.util.ID3Mod;
+import static net.minecraftforge.event.entity.player.PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK;
+
+import java.util.List;
+
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemTool;
 import net.minecraft.network.play.server.S2FPacketSetSlot;
+import net.minecraft.util.BlockPos;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import org.apache.logging.log4j.Logger;
-
-import java.util.List;
-
-import static net.minecraftforge.event.entity.player.PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 /**
  * Main mod file
@@ -55,27 +51,21 @@ import static net.minecraftforge.event.entity.player.PlayerInteractEvent.Action.
  *
  * @author Dries007
  * @author DoubleDoorDevelopment
+ * @author Joose
  */
 @Mod(modid = TorchTools.MODID, name = TorchTools.MODID)
-public class TorchTools implements ID3Mod
+public class TorchTools
 {
     public static final String MODID = "TorchTools";
 
     @Mod.Instance(MODID)
     public static TorchTools instance;
 
-    private Logger      logger;
     private int[] slots = {8, 2, 3, 4, 5, 6, 7, 8, -1};
 
     public TorchTools()
     {
         MinecraftForge.EVENT_BUS.register(this);
-    }
-
-    @Mod.EventHandler
-    public void preInit(FMLPreInitializationEvent event)
-    {
-        logger = event.getModLog();
     }
 
     /**
@@ -103,14 +93,10 @@ public class TorchTools implements ID3Mod
         if (slotStack == null) return;
         // Set current slot to new slot to fool Minecraft
         event.entityPlayer.inventory.currentItem = newSlot;
-        // Debug info
-        if (D3Core.debug()) logger.info("Player: " + event.entityPlayer.getDisplayName() + "\tOldSlot: " + oldSlot + "\tOldStack: " + slotStack);
         // Fake right click                                                                                                                                                   Oh look fake values :p
-        boolean b = ((EntityPlayerMP) event.entityPlayer).theItemInWorldManager.activateBlockOrUseItem(event.entityPlayer, event.world, slotStack, event.x, event.y, event.z, event.face, 0.5f, 0.5f, 0.5f);
+        boolean b = ((EntityPlayerMP) event.entityPlayer).theItemInWorldManager.activateBlockOrUseItem(event.entityPlayer, event.world, slotStack, event.pos, event.face, 0.5f, 0.5f, 0.5f);
         // Remove empty stacks
         if (slotStack.stackSize <= 0) slotStack = null;
-        // Debug info
-        if (D3Core.debug()) logger.info("Player: " + event.entityPlayer.getDisplayName() + "\tNewSlot: " + newSlot + "\tNewStack: " + slotStack + "\tResult: " + b);
         // Set old slot back properly
         event.entityPlayer.inventory.currentItem = oldSlot;
         // Update client
@@ -118,17 +104,5 @@ public class TorchTools implements ID3Mod
         ((EntityPlayerMP) event.entityPlayer).playerNetServerHandler.sendPacket(new S2FPacketSetSlot(0, newSlot + 36, slotStack));
         // Prevent derpy doors
         event.setCanceled(true);
-    }
-
-    @Override
-    public void syncConfig()
-    {
-        
-    }
-
-    @Override
-    public void addConfigElements(List<IConfigElement> configElements)
-    {
-
     }
 }
